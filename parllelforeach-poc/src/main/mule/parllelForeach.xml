@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="2e4df85e-8d43-47b4-b408-9742fa622f9d" >
+		<http:listener-connection host="localhost" port="8083" />
+	</http:listener-config>
+	<flow name="for-eachFlow1" doc:id="43379a17-7489-471c-9770-4b705c9bfcbd" >
+		<parallel-foreach doc:name="Parallel For Each" doc:id="493b47c5-8066-4c80-83c1-3d1f6b0b5e79" collection="#[vars.payload]" timeout="60000" maxConcurrency="1">
+			<try doc:name="Try" doc:id="7f0ce243-4fe9-442e-8add-986106b5928d">
+				<set-payload value="#[payload.id * 5]" doc:name="payload name" doc:id="d7a6530e-3051-48ab-a2f7-4d31330e20ca" />
+				<error-handler>
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="d17ce5ee-c598-4d7a-b4d1-c4a63a2387b5" type="ANY">
+						<logger level="INFO" doc:name="Logger -Msg" doc:id="6b0f92e9-b7ba-431e-bf63-e656baff784b" message='#["continue"]' />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</parallel-foreach>
+	</flow>
+	<flow name="for-eachFlow" doc:id="842f3341-92ff-4dc0-b9ef-6564938e7bb9" >
+		<http:listener doc:name="Listener" doc:id="8c554ee2-803e-4701-96ea-aae09b457a76" config-ref="HTTP_Listener_config" path="/forEach"/>
+		<logger level="INFO" doc:name='START Log' doc:id="a20870f4-8706-4a88-a70c-cc0147790d31" message='#["START Log"]'/>
+		<ee:transform doc:name="Transform Message" doc:id="81c22f7e-ca91-4e12-a71e-e926c45d2fd5" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="values" ><![CDATA[[]]]></ee:set-variable>
+				<ee:set-variable variableName="payload" ><![CDATA[%dw 2.0
+output application/json
+---
+[
+ {
+  "id": 1,
+  "name": "Naveen"
+ },
+ {
+  "id": 2,
+  "name": "Rahul"
+ },
+ {
+  "id": 3,
+  "name": "Priya"
+ }
+]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="13b2c5b4-3a63-4fda-8840-0fa79be98246" name="for-eachFlow1"/>
+		<ee:transform doc:name="Transform Message" doc:id="616ff0a5-d9e2-4c83-a695-0a09c38dff43" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="END Log" doc:id="69ef6d0f-bb68-46cb-a861-17b7b4ad8187" message='#["END Log : #[vars.values]"]'/>
+	</flow>
+</mule>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="foreachFlow" doc:id="058e50f3-bc85-45b0-8fd3-b1f66bc0c010" >
+		<http:listener doc:name="Listener" doc:id="2b592108-bda0-4c90-a64a-a8cda043b85e" config-ref="HTTP_Listener_config" path="/parallelforEach"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f86aefb0-d65a-45ba-b0e1-684fc5c03062" message='#["start the flow"]'/>
+		<ee:transform doc:name="Transform Message" doc:id="841c081e-f0d0-48fc-b709-25a4eee2a5fb" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="inputPayload" ><![CDATA[%dw 2.0
+output application/json
+---
+[
+  {
+    "id": 101,
+    "name": "Naveen",
+    "department": "IT"
+  },
+  {
+    "id": 102,
+    "name": "Rahul",
+    "department": "HR"
+  },
+  {
+    "id": 103,
+    "name": "Priya",
+    "department": "Finance"
+  }
+]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="604a46a3-2e98-4816-8b52-707e53bc03fb" collection="#[vars.inputPayload]">
+			<try doc:name="Try" doc:id="b6c0a509-2608-4efc-8db0-689d77294570" >
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="403a02fa-3c27-454e-a355-cc512bf1a83f" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="d3216eba-dc16-4e69-849e-e42a18d4d7e4" >
+						<logger level="INFO" doc:name="Logger" doc:id="d2d34e5d-0412-41ff-9f72-ef7981de654e" message='#["continue the flow"]'/>
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="e9368fdd-97d0-4bb4-86d9-b94108d455c0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="f591af1b-8bba-424e-a4c9-3fff593b6bf0" message='#[payload]'/>
+	</flow>
+</mule>

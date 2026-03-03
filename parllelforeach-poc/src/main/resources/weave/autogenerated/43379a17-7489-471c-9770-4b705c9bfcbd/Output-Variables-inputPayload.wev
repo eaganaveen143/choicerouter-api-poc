@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_43379a17_7489_471c_9770_4b705c9bfcbd_Output_Variables_inputPayload = Array<{| id: Number |}>
+
